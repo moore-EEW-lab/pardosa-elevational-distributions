@@ -1,6 +1,6 @@
 Data and code for study examining the elevational distribution of Pardosa wolf spiders in Colorado. 
 
-Authors: MP Moore & Paula Cushing
+Authors: Mike Moore & Paula Cushing
 
 4 files
 1) .csv file containing species' elevational and thermal characteristics

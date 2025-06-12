@@ -1,0 +1,347 @@
+library(car)
+library(raster)
+library(ggplot2)
+library(MASS)
+library(visreg)
+
+
+############# analyses to evaluate the impact of differences in sampling intensity on observed results
+
+
+pards <- read.csv('2025_Pardosa Colorado Records.csv')
+sp.dat <- read.csv('cleaned.pards.co.elev.csv')
+
+
+### clean up pardosa dataset and add environmental data layers to it
+p <- subset(pards, !is.na(decimalLatitude) & !is.na(decimalLongitude) & !is.na(minimumElevationInMeters))
+r <- getData('worldclim', var = 'bio', res=10)
+r <- r[[c(1,6,11)]]
+names(r) <- c('bio1', 'bio6', 'bio11')
+
+coords <- data.frame(x = p$decimalLongitude, y = p$decimalLatitude)
+points <- SpatialPoints(coords, proj4string = r@crs)
+
+
+values <- extract(r, points)
+df <- cbind.data.frame(coordinates(points), values)
+df
+
+p.dat <- data.frame(p$scientificName, p$decimalLatitude, p$decimalLongitude, p$stateProvince, df$bio1, df$bio6, df$bio11, p$minimumElevationInMeters)
+colnames(p.dat) <- c('binom', 'lat', 'long', 'state', 'bio1', 'bio6', 'bio11', 'elev')
+
+# subset ot just CO data. remove topographical impossibilities
+p.co <- subset(p.dat,  state == 'Colorado')
+co <- subset(p.co, elev > 1000 & elev < 5000)
+densityPlot(co$elev)
+
+
+# make figure for sampling intensity across elevation
+n.plot <- 
+ggplot(data = co, aes(x = elev)) + 
+geom_histogram(binwidth = 100) +
+scale_x_continuous(breaks = c(1600, 2400, 3200, 4000)) +
+coord_cartesian(ylim = c(0, 260), expand = FALSE) +
+labs(x = 'Elevation (m asl)', y = 'Total Number of Specimens Collected')
+
+bgrd =
+theme(axis.text = element_text(color="Black"),
+axis.title.x = element_text(face = "plain", size = 18, margin = margin(t = 10)), 
+axis.text.x = element_text(size = 15),
+axis.title.y = element_text(face = "plain", size = 18, margin = margin(r = 10)), 
+axis.text.y = element_text(size = 15),
+panel.background = element_rect(fill = "White"),
+panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
+axis.line.x = element_line(linetype = 'solid', color = 'black', size = 0.8),
+axis.line.y = element_line(linetype = 'solid', color = 'black', size = 0.8),
+legend.key = element_rect(fill = 'white')) 
+
+pards.n.fig <- n.plot + bgrd
+
+# png('pards.sampling.intensity.elev.png', height = 7, width = 6, units = 'in', res = 600)
+# print(pards.n.fig)
+# dev.off()
+
+
+### make graph of all records (figure in supplement)
+all.rec.plot <- 
+ggplot(data = co, aes(x = binom, y = elev)) +
+geom_point(position = position_jitter(width = 0.2), shape = 1) +
+ylab('Elevation of Occurrence Record (m asl)')
+
+bgrd01 =
+theme(axis.text = element_text(color="Black"),
+axis.title.x = element_blank(), 
+axis.text.x = element_text(size = 12, angle = 90),
+axis.title.y = element_text(face = "plain", size = 18, margin = margin(r = 10)), 
+axis.text.y = element_text(size = 15),
+panel.background = element_rect(fill = "White"),
+panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
+axis.line.x = element_line(linetype = 'solid', color = 'black', size = 0.8),
+axis.line.y = element_line(linetype = 'solid', color = 'black', size = 0.8),
+legend.key = element_rect(fill = 'white'))
+
+# all.rec.fig <- all.rec.plot + bgrd01 
+# png('all.rec.png', width = 7, height = 10, units = 'in', res = 600)
+# print(all.rec.fig)
+# dev.off()
+
+## species richness across elevation
+
+co$bins <- cut(co$elev, breaks=c(seq(from = 1000, to = 4400, by = 100)))
+
+n <- table(co$bins)
+
+
+band.1000.1100 <- ifelse(sp.dat$co.min.elev < 1100 & sp.dat$co.max.elev > 1000, 1, 0)
+band.1100.1200 <- ifelse(sp.dat$co.min.elev < 1200 & sp.dat$co.max.elev > 1100, 1, 0)
+band.1200.1300 <- ifelse(sp.dat$co.min.elev < 1300 & sp.dat$co.max.elev > 1200, 1, 0)
+band.1300.1400 <- ifelse(sp.dat$co.min.elev < 1400 & sp.dat$co.max.elev > 1300, 1, 0)
+band.1400.1500 <- ifelse(sp.dat$co.min.elev < 1500 & sp.dat$co.max.elev > 1400, 1, 0)
+band.1500.1600 <- ifelse(sp.dat$co.min.elev < 1600 & sp.dat$co.max.elev > 1500, 1, 0)
+band.1600.1700 <- ifelse(sp.dat$co.min.elev < 1700 & sp.dat$co.max.elev > 1600, 1, 0)
+band.1700.1800 <- ifelse(sp.dat$co.min.elev < 1800 & sp.dat$co.max.elev > 1700, 1, 0)
+band.1800.1900 <- ifelse(sp.dat$co.min.elev < 1900 & sp.dat$co.max.elev > 1800, 1, 0)
+band.1900.2000 <- ifelse(sp.dat$co.min.elev < 2000 & sp.dat$co.max.elev > 1900, 1, 0)
+band.2000.2100 <- ifelse(sp.dat$co.min.elev < 2100 & sp.dat$co.max.elev > 2000, 1, 0)
+band.2100.2200 <- ifelse(sp.dat$co.min.elev < 2200 & sp.dat$co.max.elev > 2100, 1, 0)
+band.2200.2300 <- ifelse(sp.dat$co.min.elev < 2300 & sp.dat$co.max.elev > 2200, 1, 0)
+band.2300.2400 <- ifelse(sp.dat$co.min.elev < 2400 & sp.dat$co.max.elev > 2300, 1, 0)
+band.2400.2500 <- ifelse(sp.dat$co.min.elev < 2500 & sp.dat$co.max.elev > 2400, 1, 0)
+band.2500.2600 <- ifelse(sp.dat$co.min.elev < 2600 & sp.dat$co.max.elev > 2500, 1, 0)
+band.2600.2700 <- ifelse(sp.dat$co.min.elev < 2700 & sp.dat$co.max.elev > 2600, 1, 0)
+band.2700.2800 <- ifelse(sp.dat$co.min.elev < 2800 & sp.dat$co.max.elev > 2700, 1, 0)
+band.2800.2900 <- ifelse(sp.dat$co.min.elev < 2900 & sp.dat$co.max.elev > 2800, 1, 0)
+band.2900.3000 <- ifelse(sp.dat$co.min.elev < 3000 & sp.dat$co.max.elev > 2900, 1, 0)
+band.3000.3100 <- ifelse(sp.dat$co.min.elev < 3100 & sp.dat$co.max.elev > 3000, 1, 0)
+band.3100.3200 <- ifelse(sp.dat$co.min.elev < 3200 & sp.dat$co.max.elev > 3100, 1, 0)
+band.3200.3300 <- ifelse(sp.dat$co.min.elev < 3300 & sp.dat$co.max.elev > 3200, 1, 0)
+band.3300.3400 <- ifelse(sp.dat$co.min.elev < 3400 & sp.dat$co.max.elev > 3300, 1, 0)
+band.3400.3500 <- ifelse(sp.dat$co.min.elev < 3500 & sp.dat$co.max.elev > 3400, 1, 0)
+band.3500.3600 <- ifelse(sp.dat$co.min.elev < 3600 & sp.dat$co.max.elev > 3500, 1, 0)
+band.3600.3700 <- ifelse(sp.dat$co.min.elev < 3700 & sp.dat$co.max.elev > 3600, 1, 0)
+band.3700.3800 <- ifelse(sp.dat$co.min.elev < 3800 & sp.dat$co.max.elev > 3700, 1, 0)
+band.3800.3900 <- ifelse(sp.dat$co.min.elev < 3900 & sp.dat$co.max.elev > 3800, 1, 0)
+band.3900.4000 <- ifelse(sp.dat$co.min.elev < 4000 & sp.dat$co.max.elev > 3900, 1, 0)
+band.4000.4100 <- ifelse(sp.dat$co.min.elev < 4100 & sp.dat$co.max.elev > 4000, 1, 0)
+band.4100.4200 <- ifelse(sp.dat$co.min.elev < 4200 & sp.dat$co.max.elev > 4100, 1, 0)
+band.4200.4300 <- ifelse(sp.dat$co.min.elev < 4300 & sp.dat$co.max.elev > 4200, 1, 0)
+band.4300.4400 <- ifelse(sp.dat$co.min.elev < 4400 & sp.dat$co.max.elev > 4300, 1, 0)
+
+## make dataframe that combines the presence/absence for each species within the elevational windows
+rich.dat <- data.frame(rbind(band.1000.1100,band.1100.1200,band.1200.1300,band.1300.1400,band.1400.1500,band.1500.1600,band.1600.1700,band.1700.1800,band.1800.1900,band.1900.2000,band.2000.2100,band.2100.2200,band.2200.2300,band.2300.2400,band.2400.2500,band.2500.2600,band.2600.2700,band.2700.2800,band.2800.2900,band.2900.3000,band.3000.3100,band.3100.3200,band.3200.3300,band.3300.3400,band.3400.3500,band.3500.3600,band.3600.3700,band.3700.3800,band.3800.3900,band.3900.4000,band.4000.4100,band.4100.4200,band.4200.4300,band.4300.4400))
+
+## sum the rows to calculate species richness within each elevational window
+rich.dat$richness <- rowSums(rich.dat)
+rich.dat$elev <-seq(1050,4350, by = 100)
+head(rich.dat)
+rich.dat$n <- as.vector(n)
+
+
+
+#### test if sampling intensity is a better predictor of species richness than elevation (i.e. is the elevational pattern just an artefact of differences in sampling)
+plot(log(rich.dat$richness) ~ log(rich.dat$n))
+
+resid01 <- lm(log(richness) ~ log(n) + elev + I(elev^2), data = rich.dat, na.action = na.fail)
+# Multiple R-squared:  0.9483
+
+resid02 <- lm(log(richness) ~ log(n), data = rich.dat, na.action = na.fail)
+#Multiple R-squared:  0.8302
+
+resid03 <- lm(log(richness) ~ elev + I(elev^2), data = rich.dat, na.action = na.fail)
+# Multiple R-squared:  0.9279
+
+resid04 <-lm(log(richness) ~ 1, data = rich.dat, na.action = na.fail)
+# no R2 for null models
+
+aic.tab <- AICc(resid01, resid02, resid03, resid04)
+
+        # df       AICc
+# resid01  5   9.104758
+# resid02  3  44.181084
+# resid03  4  17.626004
+# resid04  2 102.063671
+
+# calculate delta AIC
+17.626004-9.104758 # 8.521246
+44.181084-9.104758 # 35.07633
+102.063671-9.104758 # 92.95891
+
+Weights(AICc(resid01, resid02, resid03, resid04))
+ # model weights 
+# [1] 0.986 0.000 0.014 0.000
+
+### make graph. use Visreg to grab fits and CIs
+full.mod <- visreg(resid01, xvar = 'elev')
+el.mod <- visreg(resid03, xvar = 'elev')
+n.mod <- visreg(resid02, xvar = 'n')
+
+full.mod.dat <- as.data.frame(full.mod$fit)
+el.mod.dat <- as.data.frame(el.mod$fit)
+
+pards.pred.rich.plot <- 
+ggplot() + 
+geom_bar(data = rich.dat, aes(x = elev, y = richness), stat = 'identity', fill = '#CCCCCC') +
+scale_x_continuous(breaks = c(1600, 2400, 3200, 4000)) +
+geom_line(data = full.mod.dat, aes(x = elev, y = exp(visregFit)), color = 'blue') +
+geom_ribbon(data = full.mod.dat, aes(x = elev, ymin = exp(visregLwr), ymax = exp(visregUpr)), fill = 'blue', alpha = 0.3) +
+geom_line(data = el.mod.dat, aes(x = elev, y = exp(visregFit)), color = 'red') +
+geom_ribbon(data = el.mod.dat, aes(x = elev, ymin = exp(visregLwr), ymax = exp(visregUpr)), fill = 'red', alpha = 0.3) +
+coord_cartesian(ylim = c(0,43), expand = FALSE) +
+labs(x = 'Elevation (m asl)', y = 'Number of Species in Colorado')
+
+bgrd =
+theme(axis.text = element_text(color="Black"),
+axis.title.x = element_text(face = "plain", size = 18, margin = margin(t = 10)), 
+axis.text.x = element_text(size = 15),
+axis.title.y = element_text(face = "plain", size = 18, margin = margin(r = 10)), 
+axis.text.y = element_text(size = 15),
+panel.background = element_rect(fill = "White"),
+panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
+axis.line.x = element_line(linetype = 'solid', color = 'black', size = 0.8),
+axis.line.y = element_line(linetype = 'solid', color = 'black', size = 0.8),
+legend.key = element_rect(fill = 'white')) 
+
+pards.pred.rich.fig <- pards.pred.rich.plot + bgrd
+pards.pred.rich.fig
+
+# png('pards.predicted.richness.elev.png', height = 7, width = 6, units = 'in', res = 600)
+# print(pards.pred.rich.fig)
+# dev.off()
+
+### compare predicted peaks in species richness
+full.mod.dat[which(full.mod.dat$visregFit==max(full.mod.dat$visregFit)),]
+    # n elev richness visregFit visregLwr visregUpr
+# 48 60 2601     20.5  3.446307   3.28591  3.606704
+
+el.mod.dat[which(el.mod.dat$visregFit==max(el.mod.dat$visregFit)),]
+   # elev richness visregFit visregLwr visregUpr
+# 48 2601     20.5  3.606523  3.456827   3.75622
+
+
+##### graph to show relationship between # of occurrence records and estimated elevational breadth (Fig. 1C)
+
+cor.test(log10(sp.dat$CO.sample.size), log10(sp.dat$co.elev.breadth))
+	# Pearson's product-moment correlation
+
+# data:  log10(sp.dat$CO.sample.size) and log10(sp.dat$co.elev.breadth)
+# t = 2.8625, df = 32, p-value = 0.007355
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.1337592 0.6850697
+# sample estimates:
+      # cor 
+# 0.4515022 
+
+
+sample.plot <-
+ggplot(data = sp.dat, aes(x = CO.sample.size, y = co.elev.breadth)) +
+scale_x_continuous(trans = 'log10') +
+scale_y_continuous(trans = 'log10') +
+geom_point(size = 3) +
+labs(x = 'Total Number of Specimens Collected', y = 'Elevational Range of Colorado Collections (m)')
+
+bgrd =
+theme(axis.text = element_text(color="Black"),
+axis.title.x = element_text(face = "plain", size = 18, margin = margin(t = 10)), 
+axis.text.x = element_text(size = 15),
+axis.title.y = element_text(face = "plain", size = 18, margin = margin(r = 10)), 
+axis.text.y = element_text(size = 15),
+panel.background = element_rect(fill = "White"),
+panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
+axis.line.x = element_line(linetype = 'solid', color = 'black', size = 0.8),
+axis.line.y = element_line(linetype = 'solid', color = 'black', size = 0.8),
+legend.key = element_rect(fill = 'white')) 
+
+sample.fig <- sample.plot + bgrd
+
+# png('pards.sample.fig.png', height = 7, width = 6, units = 'in', res = 600)
+# print(sample.fig)
+# dev.off()
+
+
+
+
+##### Analyses to assess whether temporal variation in the occurrence records is biasing our conclusions
+
+# load dataset that has niche estimates using all records vs only those records since 1980
+mod <- read.csv('modern records.csv')
+
+
+# look at correlations between niche estimates between all records vs only those records since 1980. Table in supplement
+cor.test(mod$mod.co.max.elev, mod$all.co.max.elev)
+
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.co.max.elev and mod$all.co.max.elev
+# t = 23.078, df = 31, p-value < 2.2e-16
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.9437648 0.9862668
+# sample estimates:
+     # cor 
+# 0.972108 
+
+
+cor.test(mod$mod.co.mid.elev, mod$all.co.mid.elev)
+
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.co.mid.elev and mod$all.co.mid.elev
+# t = 12.782, df = 31, p-value = 6.763e-14
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.8368956 0.9584413
+# sample estimates:
+      # cor 
+# 0.9167963 
+
+
+cor.test(mod$mod.co.elev.breadth, mod$all.co.elev.breadth)
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.co.elev.breadth and mod$all.co.elev.breadth
+# t = 13.434, df = 31, p-value = 1.817e-14
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.8501084 0.9620115
+# sample estimates:
+     # cor 
+# 0.923805 
+
+
+cor.test(mod$mod.pam.bio1, mod$all.pam.bio1)
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.pam.bio1 and mod$all.pam.bio1
+# t = 9.4226, df = 19, p-value = 1.36e-08
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.7824755 0.9622669
+# sample estimates:
+      # cor 
+# 0.9075919 
+
+cor.test(mod$mod.pam.bio6, mod$all.pam.bio6)
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.pam.bio6 and mod$all.pam.bio6
+# t = 6.2824, df = 19, p-value = 4.955e-06
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.6042285 0.9251615
+# sample estimates:
+      # cor 
+# 0.8216089 
+
+
+cor.test(mod$mod.pam.bio11, mod$all.pam.bio11)
+	# Pearson's product-moment correlation
+
+# data:  mod$mod.pam.bio11 and mod$all.pam.bio11
+# t = 6.9991, df = 19, p-value = 1.149e-06
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+ # 0.6584296 0.9371331
+# sample estimates:
+      # cor 
+# 0.8488447

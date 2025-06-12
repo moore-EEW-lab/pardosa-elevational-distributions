@@ -1,0 +1,12 @@
+#Year: 2025
+ 
+#File Name: 2025_Pardosa Colorado Records.csv
+#Description: all occurrence records of Pardosa wolf spiders in the Rocky Mountains of Colorado
+#Rows: 2324, excluding header. Each row is a unique occurrence record of a Pardosa wolf spider
+#Columns: 5. scientificName, stateProvince, decimalLatitude, decimalLongitude, references
+
+#scientificName: species name for each observed individual
+# stateProvince: US state in which spider was collected
+# decimalLatitude: Latitude of occurrence record
+# decimalLongitude: Longitude of occurrence record
+# references: URL link to observation in the Ecdysis dataset

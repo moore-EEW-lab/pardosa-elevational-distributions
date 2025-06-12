@@ -1,0 +1,21 @@
+#Year: 2025
+ 
+#File Name: modern records.csv
+#Description: elevational characteristics of Pardosa wolf spiders in the Rocky Mountains of Colorado using all occurrence records vs only occurrence records since 1980. Note that some rows have missing data because of insufficient occurrence records since 1980 to estimate characteristics
+#Rows: 34, excluding header. Each row is a unique species of Pardosa wolf spider
+#Columns: 13. occ.bio1, occ.bio6, occ.bio11, co.mean.elev, co.max.elev, co.min.elev, pam.bio1, pam.bio5, pam.bio6, pam.bio11, binom, CO.sample.size, co.elev.breadth, co.mid.elev
+ 
+
+#binom. genus and species name of species 
+#all.co.max.elev. maximum elevation of species collections in Colorado using all occurrence records
+#all.pam.bio1. average BIO1 across all grid cells in which species was present in presence/absence matrix using all occurrence records
+#all.pam.bio6. average BIO6 across all grid cells in which species was present in presence/absence matrix using all occurrence records
+#all.pam.bio11. average BIO11 across all grid cells in which species was present in presence/absence matrix using all occurrence records
+#all.co.elev.breadth. difference between the maximum and minimum elevations at which the species has been collected in Colorado using all occurrence records
+#all.co.mid.elev. mid-point between the maximum and minimum elevations at which the species has been collected in Colorado using all occurrence records
+#mod.co.max.elev. maximum elevation of species collections in Colorado using only occurrence records since 1980
+#mod.pam.bio1. average BIO1 across all grid cells in which species was present in presence/absence matrix using only occurrence records since 1980
+#mod.pam.bio6. average BIO6 across all grid cells in which species was present in presence/absence matrix using only occurrence records since 1980
+#mod.pam.bio11. average BIO11 across all grid cells in which species was present in presence/absence matrix using only occurrence records since 1980
+#mod.co.elev.breadth. difference between the maximum and minimum elevations at which the species has been collected in Colorado using only occurrence records since 1980
+#mod.co.mid.elev. mid-point between the maximum and minimum elevations at which the species has been collected in Colorado using only occurrence records since 1980

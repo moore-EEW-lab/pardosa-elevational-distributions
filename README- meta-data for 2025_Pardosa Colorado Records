@@ -9,4 +9,5 @@
 # stateProvince: US state in which spider was collected
 # decimalLatitude: Latitude of occurrence record
 # decimalLongitude: Longitude of occurrence record
+# minimumElevationInMeters: elevation of occurrence record
 # references: URL link to observation in the Ecdysis dataset
